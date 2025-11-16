@@ -196,7 +196,6 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            max-height: calc(100vh - 200px);
             overflow-y: auto;
             overflow-x: hidden;
         }
@@ -221,11 +220,34 @@
 
         .certificate-preview {
             background: white;
-            width: 800px;
-            height: 600px;
+            width: 100%;
+            max-width: 800px;
+            min-height: 700px;
+            height: auto;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             position: relative;
             overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .certificate-preview.size-small {
+            min-height: 500px;
+            max-width: 600px;
+        }
+
+        .certificate-preview.size-medium {
+            min-height: 700px;
+            max-width: 800px;
+        }
+
+        .certificate-preview.size-large {
+            min-height: 900px;
+            max-width: 1000px;
+        }
+
+        .certificate-preview.size-xlarge {
+            min-height: 1100px;
+            max-width: 1200px;
         }
 
         .template-selector {
@@ -271,6 +293,7 @@
         .cert-template {
             width: 100%;
             height: 100%;
+            min-height: 700px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -278,6 +301,23 @@
             text-align: center;
             position: relative;
             box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        .size-small .cert-template {
+            min-height: 500px;
+        }
+
+        .size-medium .cert-template {
+            min-height: 700px;
+        }
+
+        .size-large .cert-template {
+            min-height: 900px;
+        }
+
+        .size-xlarge .cert-template {
+            min-height: 1100px;
         }
 
         .template-classic {
@@ -301,6 +341,7 @@
         .cert-content {
             max-width: 100%;
             width: 100%;
+            padding: 20px;
             overflow: visible;
             display: flex;
             flex-direction: column;
@@ -309,13 +350,33 @@
         }
 
         .cert-logo {
-            width: 70px;
-            height: 70px;
+            width: 80px;
+            height: 80px;
             object-fit: contain;
             margin-bottom: 15px;
             position: relative;
             z-index: 3;
             display: block;
+        }
+
+        .size-small .cert-logo {
+            width: 60px;
+            height: 60px;
+        }
+
+        .size-medium .cert-logo {
+            width: 80px;
+            height: 80px;
+        }
+
+        .size-large .cert-logo {
+            width: 100px;
+            height: 100px;
+        }
+
+        .size-xlarge .cert-logo {
+            width: 120px;
+            height: 120px;
         }
 
         .cert-title {
@@ -470,13 +531,13 @@
 
             .certificate-preview {
                 width: 100%;
-                max-width: 100%;
                 height: auto;
-                min-height: 300px;
+                min-height: 400px;
             }
 
             .cert-template {
-                padding: 30px 20px !important;
+                min-height: 400px;
+                padding: 40px 30px !important;
             }
 
             .cert-title {
@@ -573,10 +634,11 @@
             }
 
             .certificate-preview {
-                min-height: 250px;
+                min-height: 300px;
             }
 
             .cert-template {
+                min-height: 300px;
                 padding: 25px 15px !important;
             }
 
@@ -694,6 +756,16 @@
                 </div>
 
                 <div class="form-group">
+                    <label>Certificate Size</label>
+                    <select id="certSize" onchange="updateCertificateSize()">
+                        <option value="small">Small (500px)</option>
+                        <option value="medium" selected>Medium (700px)</option>
+                        <option value="large">Large (900px)</option>
+                        <option value="xlarge">Extra Large (1100px)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
                     <label>Title Font ("CERTIFICATE")</label>
                     <select id="titleFont" onchange="updateTitleFont()">
                         <option value="'Cinzel', serif">Cinzel (Default)</option>
@@ -798,7 +870,7 @@
 
             <div class="preview-area">
                 <h2 style="margin-bottom: 20px;">Certificate Preview</h2>
-                <div class="certificate-preview" id="certificatePreview">
+                <div class="certificate-preview size-medium" id="certificatePreview">
                     <div class="cert-template template-classic">
                         <div class="cert-content">
                             <img src="" alt="" class="cert-logo" id="certLogo" style="display: none;">
@@ -1039,6 +1111,17 @@
         function updateTitleFont() {
             const font = document.getElementById('titleFont').value;
             document.getElementById('certTitle').style.fontFamily = font;
+        }
+
+        function updateCertificateSize() {
+            const size = document.getElementById('certSize').value;
+            const preview = document.getElementById('certificatePreview');
+            
+            // Remove all size classes
+            preview.classList.remove('size-small', 'size-medium', 'size-large', 'size-xlarge');
+            
+            // Add selected size class
+            preview.classList.add('size-' + size);
         }
 
         function updateNameFont() {
@@ -1345,6 +1428,7 @@
                 .template-${templateKey} .cert-content {
                     max-width: 100%;
                     width: 100%;
+                    padding: 20px;
                     overflow: visible;
                     display: flex;
                     flex-direction: column;
