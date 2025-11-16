@@ -189,6 +189,46 @@
             transform: translateY(-2px);
         }
 
+        .ai-suggestion-box {
+            background: #f0e6ff;
+            border: 2px solid #9333ea;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .ai-suggestion-box.active {
+            display: block;
+        }
+
+        .ai-suggestion-box h4 {
+            color: #9333ea;
+            margin-bottom: 10px;
+        }
+
+        .ai-suggestion-box p {
+            margin: 8px 0;
+            color: #555;
+            line-height: 1.5;
+        }
+
+        .ai-loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #9333ea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         .preview-area {
             background: #f8f9fa;
             padding: 30px;
@@ -755,6 +795,11 @@
                     </select>
                 </div>
 
+                <div id="aiAchievementBox" class="ai-suggestion-box">
+                    <h4>✨ AI Suggestion</h4>
+                    <p id="aiAchievementText"></p>
+                </div>
+
                 <div class="form-group">
                     <label>Certificate Size</label>
                     <select id="certSize" onchange="updateCertificateSize()">
@@ -805,6 +850,7 @@
                 <div class="form-group">
                     <label>Achievement/Course Name</label>
                     <input type="text" id="achievementName" placeholder="e.g., Web Development Course">
+                    <button class="btn" onclick="aiSuggestAchievement()" style="margin-top: 8px; background: #9333ea; color: white; padding: 8px;">✨ AI Suggest Achievement</button>
                 </div>
 
                 <div class="form-group">
@@ -866,6 +912,12 @@
 
                 <button class="btn btn-primary" onclick="openTemplateModal()">➕ Add New Template</button>
                 <button class="btn btn-primary" onclick="editCurrentTemplate()" style="background: #17a2b8;">✏️ Edit Current Template</button>
+                <button class="btn" onclick="aiDesignSuggestion()" style="background: #9333ea; color: white;">🤖 AI Design Suggestions</button>
+                
+                <div id="aiDesignBox" class="ai-suggestion-box">
+                    <h4>🤖 AI Design Recommendations</h4>
+                    <p id="aiDesignText"></p>
+                </div>
             </div>
 
             <div class="preview-area">
@@ -1495,6 +1547,90 @@
                 closeTemplateModal();
             }
         });
+
+        // AI Functions
+        async function callClaudeAPI(prompt) {
+            try {
+                const response = await fetch("https://api.anthropic.com/v1/messages", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-api-key": "YOUR_API_KEY_HERE", // User needs to add their key
+                        "anthropic-version": "2023-06-01"
+                    },
+                    body: JSON.stringify({
+                        model: "claude-sonnet-4-20250514",
+                        max_tokens: 1000,
+                        messages: [{
+                            role: "user",
+                            content: prompt
+                        }]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('API call failed. Please add your Anthropic API key.');
+                }
+
+                const data = await response.json();
+                return data.content[0].text;
+            } catch (error) {
+                return "AI feature requires an API key. Get one free at: https://console.anthropic.com/";
+            }
+        }
+
+        async function aiSuggestAchievement() {
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.innerHTML = '✨ Thinking...<span class="ai-loading"></span>';
+            btn.disabled = true;
+
+            const candidateName = document.getElementById('candidateName').value || 'the candidate';
+            const authority = document.getElementById('authorityName').value || 'your organization';
+
+            const prompt = `Suggest 3 creative and professional achievement/course names for a certificate. Context: The certificate is from "${authority}" for "${candidateName}". 
+
+Provide only the 3 suggestions, one per line, without numbering or extra text. Make them concise (3-6 words each) and professional.`;
+
+            const suggestion = await callClaudeAPI(prompt);
+            
+            document.getElementById('aiAchievementText').textContent = suggestion;
+            document.getElementById('aiAchievementBox').classList.add('active');
+            
+            btn.textContent = originalText;
+            btn.disabled = false;
+        }
+
+        async function aiDesignSuggestion() {
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.innerHTML = '🤖 Analyzing...<span class="ai-loading"></span>';
+            btn.disabled = true;
+
+            const achievement = document.getElementById('achievementName').value || 'general achievement';
+            const template = document.getElementById('templateSelect').options[document.getElementById('templateSelect').selectedIndex].text;
+
+            const prompt = `As a certificate design expert, provide 3 specific design recommendations for a certificate. 
+
+Context:
+- Achievement: "${achievement}"
+- Current template: ${template}
+
+Provide practical suggestions about:
+1. Font pairing recommendations
+2. Color scheme suggestions
+3. Layout or style improvements
+
+Keep each suggestion to 1-2 sentences. Be specific and actionable.`;
+
+            const suggestion = await callClaudeAPI(prompt);
+            
+            document.getElementById('aiDesignText').textContent = suggestion;
+            document.getElementById('aiDesignBox').classList.add('active');
+            
+            btn.textContent = originalText;
+            btn.disabled = false;
+        }
     </script>
 </body>
 </html>
